@@ -5,19 +5,28 @@ import { useAgentStore } from '../store/agentStore';
 // ============================================================
 // FAST PATH - Deterministic command registry
 // ============================================================
+// FAST COMMANDS - Only truly deterministic, zero-ambiguity commands
+// These bypass ALL models (even Laya) for maximum speed
 const FAST_COMMANDS: Record<string, { tool: string; args: Record<string, unknown> }> = {
-  'open chrome': { tool: 'system.open_app', args: { app_name: 'chrome' } },
-  'open calculator': { tool: 'system.open_app', args: { app_name: 'calculator' } },
-  'open terminal': { tool: 'system.open_app', args: { app_name: 'terminal' } },
-  'open settings': { tool: 'system.open_app', args: { app_name: 'settings' } },
-  'check cpu': { tool: 'monitoring.cpu', args: {} },
-  'check memory': { tool: 'monitoring.memory', args: {} },
-  'check disk': { tool: 'monitoring.disk', args: {} },
-  'take screenshot': { tool: 'system.screenshot', args: {} },
-  'list apps': { tool: 'system.list_apps', args: {} },
   'pause': { tool: 'audio.pause', args: {} },
   'stop': { tool: 'audio.pause', args: {} },
+  'refresh': { tool: 'browser.refresh', args: {} },
 };
+
+// LAYA-DIRECT COMMANDS - Laya handles these in a single call
+// No Qwen, minimal latency, Laya decides + routes in one shot
+const LAYA_DIRECT_PATTERNS: { pattern: RegExp; tool: string; extractArgs?: (text: string) => Record<string, unknown> }[] = [
+  { pattern: /^(show|list|get)\s+(all\s+)?apps/i, tool: 'system.list_apps' },
+  { pattern: /^(show|list|get)\s+installed/i, tool: 'system.list_apps' },
+  { pattern: /^what\s+apps/i, tool: 'system.list_apps' },
+  { pattern: /^open\s+(.+)/i, tool: 'system.open_app', extractArgs: (t) => ({ app_name: t.replace(/^open\s+/i, '').trim() }) },
+  { pattern: /^close\s+(.+)/i, tool: 'system.close_app', extractArgs: (t) => ({ app_name: t.replace(/^close\s+/i, '').trim() }) },
+  { pattern: /^(check|get|show)\s+cpu/i, tool: 'monitoring.cpu' },
+  { pattern: /^(check|get|show)\s+(memory|ram)/i, tool: 'monitoring.memory' },
+  { pattern: /^(check|get|show)\s+disk/i, tool: 'monitoring.disk' },
+  { pattern: /^(play)\s+(.+)/i, tool: 'audio.play', extractArgs: (t) => ({ source: t.replace(/^play\s+/i, '').trim() }) },
+  { pattern: /^(search|google)\s+(.+)/i, tool: 'browser.search', extractArgs: (t) => ({ query: t.replace(/^(search|google)\s+/i, '').trim() }) },
+];
 
 // ============================================================
 // DOMAIN-TOOL MAPPING
@@ -232,7 +241,7 @@ export async function processRequest(text: string, isPartial: boolean = false): 
   store.setPipeline({ ...pipeline });
   store.addEvent({ id: uuid(), type: 'InputNormalized', timestamp: Date.now(), data: {}, latency_ms: 10 });
 
-  // Stage 2: Fast Path check
+  // Stage 2: Fast Path check (truly deterministic, bypasses all models)
   const fastMatch = FAST_COMMANDS[text.toLowerCase().trim()];
   if (fastMatch) {
     pipeline.stages[1].status = 'complete';
@@ -250,6 +259,66 @@ export async function processRequest(text: string, isPartial: boolean = false): 
 
     const totalLatency = Date.now() - startTime;
     respondWithResult(text, execution, totalLatency, 0, false);
+    return;
+  }
+
+  // Stage 2.5: Laya Direct check (Laya handles in single call, no Qwen)
+  const layaDirectMatch = LAYA_DIRECT_PATTERNS.find(p => p.pattern.test(text));
+  if (layaDirectMatch) {
+    pipeline.stages[1].status = 'complete';
+    pipeline.stages[1].latency_ms = 5;
+    pipeline.stages[2].status = 'active';
+    store.setPipeline({ ...pipeline });
+    store.addEvent({ id: uuid(), type: 'LayaDirectMatched', timestamp: Date.now(), data: { tool: layaDirectMatch.tool }, latency_ms: 0 });
+
+    // Laya makes the decision (simulated, very fast)
+    const layaLatency = 15 + Math.random() * 25; // 15-40ms
+    await sleep(layaLatency);
+    
+    const layaDecision: LayaDecision = {
+      tool_required: true,
+      browser_required: layaDirectMatch.tool.startsWith('browser'),
+      reasoning_required: false,
+      risk: 'low',
+      multi_step: false,
+      intent: 'direct_tool_execution',
+      confidence: 0.95 + Math.random() * 0.05,
+      domain: layaDirectMatch.tool.split('.')[0],
+      tool: layaDirectMatch.tool,
+      latency_ms: Math.round(layaLatency),
+    };
+    
+    store.setLayaDecision(layaDecision);
+    pipeline.stages[2].status = 'complete';
+    pipeline.stages[2].latency_ms = layaDecision.latency_ms;
+    store.setPipeline({ ...pipeline });
+    store.addEvent({ id: uuid(), type: 'LayaDecisionCompleted', timestamp: Date.now(), data: { ...layaDecision }, latency_ms: layaDecision.latency_ms });
+
+    // Execute tool directly (no Laya #2 needed, Laya already chose the tool)
+    pipeline.stages[4].status = 'active';
+    store.setPipeline({ ...pipeline });
+    store.setStatus('executing');
+    
+    const toolArgs = layaDirectMatch.extractArgs ? layaDirectMatch.extractArgs(text) : {};
+    const execution = await executeTool(layaDirectMatch.tool, toolArgs);
+    
+    pipeline.stages[4].status = 'complete';
+    pipeline.stages[4].latency_ms = execution.latency_ms;
+    pipeline.stages[3].status = 'complete'; // Skip Laya #2
+    pipeline.stages[3].latency_ms = 0;
+    pipeline.currentStage = 5;
+    store.setPipeline({ ...pipeline });
+
+    // Verify
+    pipeline.stages[5].status = 'active';
+    store.setPipeline({ ...pipeline });
+    await sleep(10);
+    pipeline.stages[5].status = 'complete';
+    pipeline.stages[5].latency_ms = 10;
+    store.setPipeline({ ...pipeline });
+
+    const totalLatency = Date.now() - startTime;
+    respondWithResult(text, execution, totalLatency, 1, false); // 1 Laya call
     return;
   }
 
@@ -364,18 +433,21 @@ function respondWithResult(text: string, execution: ToolExecution, totalLatency:
   const store = useAgentStore.getState();
   const response = formatToolResponse(execution);
   
+  // Determine route label
+  const routeLabel = layaCalls === 1 ? 'laya_direct' : layaCalls === 0 ? 'fast_path' : 'direct_tool';
+  
   store.addMessage({
     id: uuid(),
     role: 'agent',
     content: response,
     timestamp: Date.now(),
     metadata: {
-      route: 'direct_tool',
+      route: routeLabel,
       tool: execution.tool_name,
       latency_ms: totalLatency,
       laya_calls: layaCalls,
       qwen_called: qwenCalled,
-      confidence: 0.92,
+      confidence: 0.95,
     },
   });
 
@@ -387,10 +459,12 @@ function respondWithResult(text: string, execution: ToolExecution, totalLatency:
     metadata: { tool: execution.tool_name },
   });
 
+  // Update metrics - Laya Direct counts as direct execution
+  const isLayaDirect = layaCalls === 1;
   store.updateMetrics({
     total_requests: store.metrics.total_requests + 1,
     laya_calls_total: store.metrics.laya_calls_total + layaCalls,
-    laya_avg_latency: Math.round((store.metrics.laya_avg_latency * store.metrics.total_requests + 65) / (store.metrics.total_requests + 1)),
+    laya_avg_latency: Math.round((store.metrics.laya_avg_latency * store.metrics.total_requests + (isLayaDirect ? 30 : 65)) / (store.metrics.total_requests + 1)),
     direct_execution_pct: Math.round(((store.metrics.direct_execution_pct * store.metrics.total_requests + 100) / (store.metrics.total_requests + 1))),
     avg_e2e_latency: Math.round((store.metrics.avg_e2e_latency * store.metrics.total_requests + totalLatency) / (store.metrics.total_requests + 1)),
   });
@@ -409,8 +483,10 @@ function formatToolResponse(execution: ToolExecution): string {
       return `Memory: ${result.usage_pct}% used (${result.used_gb}GB / ${result.total_gb}GB), ${result.free_gb}GB free`;
     case 'monitoring.disk':
       return `Disk: ${result.usage_pct}% used, ${result.free_gb}GB free of ${result.total_gb}GB`;
-    case 'system.list_apps':
-      return `Installed applications: ${(result.apps as string[]).join(', ')}`;
+    case 'system.list_apps': {
+      const apps = result.apps as string[];
+      return `📱 Found ${apps.length} applications:\n\n${apps.map((app, i) => `  ${i + 1}. ${app}`).join('\n')}`;
+    }
     case 'system.open_app':
       return `✓ Opened ${result.app_name} (PID: ${result.pid})`;
     case 'system.close_app':

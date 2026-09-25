@@ -198,9 +198,26 @@ export default function ChatInterface() {
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                 {msg.metadata && (
                   <div className="flex items-center gap-2 mt-1.5 pt-1.5 border-t border-white/10">
-                    {msg.metadata.route && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/60">
-                        {msg.metadata.route}
+                    {msg.metadata.route === 'laya_direct' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-medium flex items-center gap-1">
+                        <Zap className="w-2.5 h-2.5" />
+                        Laya Direct
+                      </span>
+                    )}
+                    {msg.metadata.route === 'fast_path' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 font-medium flex items-center gap-1">
+                        <Zap className="w-2.5 h-2.5" />
+                        Fast Path
+                      </span>
+                    )}
+                    {msg.metadata.route === 'direct_tool' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                        direct_tool
+                      </span>
+                    )}
+                    {msg.metadata.route === 'qwen' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                        qwen
                       </span>
                     )}
                     {msg.metadata.tool && (
@@ -208,12 +225,12 @@ export default function ChatInterface() {
                         {msg.metadata.tool}
                       </span>
                     )}
-                    {msg.metadata.latency_ms && (
+                    {msg.metadata.latency_ms !== undefined && (
                       <span className="text-[10px] text-white/40">
                         {msg.metadata.latency_ms}ms
                       </span>
                     )}
-                    {msg.metadata.laya_calls !== undefined && (
+                    {msg.metadata.laya_calls !== undefined && msg.metadata.laya_calls > 0 && (
                       <span className="text-[10px] text-amber-400/60">
                         L×{msg.metadata.laya_calls}
                       </span>
@@ -249,13 +266,19 @@ export default function ChatInterface() {
             <p className="text-sm font-medium text-gray-400">Modular AI Agent</p>
             <p className="text-xs text-gray-600 mt-1">Laya System-1 + Qwen System-2</p>
             <div className="flex flex-wrap gap-2 mt-4 justify-center">
-              {['Check CPU', 'Open Chrome', 'List apps', 'Search Google for AI'].map(cmd => (
+              {[
+                { cmd: 'Show apps', badge: 'Laya' },
+                { cmd: 'Check CPU', badge: 'Laya' },
+                { cmd: 'Open Chrome', badge: 'Laya' },
+                { cmd: 'Search Google for AI', badge: 'Laya' },
+              ].map(({ cmd, badge }) => (
                 <button
                   key={cmd}
                   onClick={() => { setInput(cmd); inputRef.current?.focus(); }}
-                  className="px-3 py-1.5 rounded-lg bg-gray-800/50 text-xs text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all"
+                  className="group px-3 py-1.5 rounded-lg bg-gray-800/50 text-xs text-gray-400 hover:text-white hover:bg-gray-700/50 transition-all flex items-center gap-1.5"
                 >
-                  {cmd}
+                  <span>{cmd}</span>
+                  <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/10 text-amber-400/60 group-hover:text-amber-300">{badge}</span>
                 </button>
               ))}
             </div>

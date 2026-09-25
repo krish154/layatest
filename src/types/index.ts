@@ -3,7 +3,7 @@
 // ============================================================
 
 export type Modality = 'text' | 'audio' | 'image' | 'video' | 'screen' | 'document' | 'event';
-export type RoutePath = 'direct_response' | 'direct_tool' | 'layered_tool' | 'qwen' | 'clarification' | 'confirmation';
+export type RoutePath = 'direct_response' | 'direct_tool' | 'layered_tool' | 'qwen' | 'clarification' | 'confirmation' | 'laya_direct' | 'fast_path';
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 export type AgentStatus = 'idle' | 'listening' | 'thinking' | 'executing' | 'verifying' | 'error';
 export type ModelType = 'decision' | 'reasoning' | 'vision' | 'audio';

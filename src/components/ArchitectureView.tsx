@@ -94,16 +94,22 @@ export default function ArchitectureView() {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          {/* Simple Path */}
+          {/* Laya Direct Path - Single Laya call handles everything */}
           <div className={`rounded-xl border p-3 transition-all ${
+            layaDecision?.intent === 'direct_tool_execution' ? 'border-amber-500/50 bg-amber-500/5' :
             (routeDecision?.path ?? '') === 'direct_tool' ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-gray-700/30 bg-gray-800/20'
           }`}>
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-xs font-medium text-emerald-400">Simple Path</span>
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs font-medium text-amber-400">
+                {layaDecision?.intent === 'direct_tool_execution' ? 'Laya Direct' : 'Simple Path'}
+              </span>
+              {layaDecision?.intent === 'direct_tool_execution' && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-300">1 call</span>
+              )}
             </div>
             <div className="space-y-1.5">
-              <MiniNode label="Laya #2" sublabel="Tool select" active={isActive('Laya #2')} />
+              <MiniNode label="Laya" sublabel={layaDecision?.intent === 'direct_tool_execution' ? 'Decide + Route' : 'Classify'} active={isActive('Laya #1')} />
               <MiniNode label="Execute" sublabel="Tool gateway" active={isActive('Execute')} />
               <MiniNode label="Verify" sublabel="Check result" active={isActive('Verify')} />
             </div>
@@ -158,12 +164,24 @@ export default function ArchitectureView() {
 
       {/* Golden Rules */}
       <div className="mt-4 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30">
-        <p className="text-[10px] text-gray-500 font-medium mb-1.5">GOLDEN RULES</p>
-        <div className="space-y-1">
-          <p className="text-[10px] text-gray-400">• Simple task = Laya + tools (0 Qwen)</p>
-          <p className="text-[10px] text-gray-400">• Max 2 Laya calls for tool routing</p>
-          <p className="text-[10px] text-gray-400">• Policy cannot be overridden by models</p>
-          <p className="text-[10px] text-gray-400">• New tools = register, don't rewrite</p>
+        <p className="text-[10px] text-gray-500 font-medium mb-1.5">ROUTING MODES</p>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+            <p className="text-[10px] text-gray-400"><span className="text-yellow-300">Fast Path</span> — Deterministic, 0 model calls</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-amber-400" />
+            <p className="text-[10px] text-gray-400"><span className="text-amber-300">Laya Direct</span> — 1 Laya call, handles routing + execution</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400" />
+            <p className="text-[10px] text-gray-400"><span className="text-emerald-300">Simple Path</span> — 2 Laya calls (classify + select)</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-purple-400" />
+            <p className="text-[10px] text-gray-400"><span className="text-purple-300">Qwen</span> — Complex reasoning, planning</p>
+          </div>
         </div>
       </div>
     </div>
