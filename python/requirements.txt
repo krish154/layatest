@@ -1,0 +1,25 @@
+# Hybrid AI Agent - Python Dependencies
+# ======================================
+
+# Backend API Server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+httpx>=0.25.0
+
+# MCP Server (same deps, can run separately)
+# fastapi and uvicorn are shared
+
+# System monitoring
+psutil>=5.9.0
+
+# Browser automation (optional)
+playwright>=1.40.0
+
+# Audio pipeline (optional)
+# whisper-openai>=1.0.0
+# pyaudio>=0.2.14
+# edge-tts>=6.1.0
+
+# Install all:
+# pip install -r requirements.txt
+# playwright install chromium
