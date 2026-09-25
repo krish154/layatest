@@ -1,0 +1,35 @@
+# Hybrid AI Agent - Python Dependencies
+# ======================================
+
+# Backend API Server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+httpx>=0.25.0
+
+# MCP Server (same deps, can run separately)
+# fastapi and uvicorn are shared
+
+# System monitoring
+psutil>=5.9.0
+
+# Browser automation
+playwright>=1.40.0
+
+# Audio pipeline - STT options (choose one or both)
+openai-whisper>=1.0.0    # High quality, GPU recommended
+vosk>=0.3.45             # Fast, offline, CPU friendly
+
+# Audio pipeline - TTS options (choose one)
+edge-tts>=6.1.0          # Free, high quality (recommended)
+gTTS>=2.3.0              # Google TTS, simple
+
+# Complex task orchestration (optional)
+langgraph>=0.0.30
+langchain-core>=0.1.0
+
+# Install all:
+# pip install -r requirements.txt
+# playwright install chromium
+
+# For GPU-accelerated Whisper:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
