@@ -10,11 +10,13 @@ import ToolRegistry from './components/ToolRegistry';
 import MetricsPanel from './components/MetricsPanel';
 import SettingsPanel from './components/SettingsPanel';
 import LayaUIDecision from './components/LayaUIDecision';
+import DebugPanel from './components/DebugPanel';
 
-type Tab = 'chat' | 'architecture' | 'tools' | 'metrics' | 'settings' | 'ui_engine';
+type Tab = 'chat' | 'architecture' | 'tools' | 'metrics' | 'settings' | 'ui_engine' | 'debug';
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'chat', label: 'Agent Chat', icon: <MessageSquare className="w-4 h-4" /> },
+  { id: 'debug', label: 'Debug Trace', icon: <Activity className="w-4 h-4" /> },
   { id: 'architecture', label: 'Architecture', icon: <Layout className="w-4 h-4" /> },
   { id: 'ui_engine', label: 'Laya UI', icon: <Eye className="w-4 h-4" /> },
   { id: 'tools', label: 'Tools', icon: <Wrench className="w-4 h-4" /> },
@@ -157,6 +159,14 @@ export default function App() {
                 </div>
               )}
               {activeTab === 'architecture' && <ArchitectureView />}
+              {activeTab === 'debug' && (
+                <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <DebugPanel />
+                  <div className="hidden lg:block">
+                    <ArchitectureView />
+                  </div>
+                </div>
+              )}
               {activeTab === 'ui_engine' && (
                 <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <LayaUIDecision />

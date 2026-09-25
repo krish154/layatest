@@ -160,7 +160,7 @@ export async function processRequest(text: string): Promise<void> {
       role: 'agent',
       content: responseContent,
       timestamp: Date.now(),
-      meta {
+      metadata: {
         route: result.path,
         tool: result.execution?.tool_name || result.laya_call_2?.selected_tool,
         latency_ms: result.total_latency_ms,
@@ -176,7 +176,7 @@ export async function processRequest(text: string): Promise<void> {
         role: 'tool',
         content: JSON.stringify(result.execution.result, null, 2),
         timestamp: Date.now(),
-        meta { tool: result.execution.tool_name },
+        metadata: { tool: result.execution.tool_name },
       });
     }
 
@@ -196,7 +196,7 @@ export async function processRequest(text: string): Promise<void> {
       role: 'agent',
       content: `⚠️ Backend not available. Make sure Python backend is running on ${BACKEND_URL}\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}\n\nStarting demo mode with simulated responses...`,
       timestamp: Date.now(),
-      meta { route: 'error' },
+      metadata: { route: 'error' },
     });
 
     // Fallback to demo mode
@@ -242,7 +242,7 @@ async function simulateDemoMode(text: string, store: any): Promise<void> {
     role: 'agent',
     content: responseContent,
     timestamp: Date.now(),
-    meta {
+    metadata: {
       route: 'laya_direct',
       tool,
       latency_ms: 120,
@@ -257,7 +257,7 @@ async function simulateDemoMode(text: string, store: any): Promise<void> {
     role: 'tool',
     content: JSON.stringify(result, null, 2),
     timestamp: Date.now(),
-    meta { tool },
+    metadata: { tool },
   });
   
   store.updateMetrics({
