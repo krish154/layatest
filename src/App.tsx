@@ -2,19 +2,21 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, Layout, Wrench, Activity, Settings, 
-  Sparkles, ChevronLeft, ChevronRight, Terminal
+  Sparkles, ChevronLeft, ChevronRight, Terminal, Eye
 } from 'lucide-react';
 import ChatInterface from './components/ChatInterface';
 import ArchitectureView from './components/ArchitectureView';
 import ToolRegistry from './components/ToolRegistry';
 import MetricsPanel from './components/MetricsPanel';
 import SettingsPanel from './components/SettingsPanel';
+import LayaUIDecision from './components/LayaUIDecision';
 
-type Tab = 'chat' | 'architecture' | 'tools' | 'metrics' | 'settings';
+type Tab = 'chat' | 'architecture' | 'tools' | 'metrics' | 'settings' | 'ui_engine';
 
 const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'chat', label: 'Agent Chat', icon: <MessageSquare className="w-4 h-4" /> },
   { id: 'architecture', label: 'Architecture', icon: <Layout className="w-4 h-4" /> },
+  { id: 'ui_engine', label: 'Laya UI', icon: <Eye className="w-4 h-4" /> },
   { id: 'tools', label: 'Tools', icon: <Wrench className="w-4 h-4" /> },
   { id: 'metrics', label: 'Metrics', icon: <Activity className="w-4 h-4" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
@@ -155,6 +157,14 @@ export default function App() {
                 </div>
               )}
               {activeTab === 'architecture' && <ArchitectureView />}
+              {activeTab === 'ui_engine' && (
+                <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <LayaUIDecision />
+                  <div className="hidden lg:block">
+                    <MetricsPanel />
+                  </div>
+                </div>
+              )}
               {activeTab === 'tools' && <ToolRegistry />}
               {activeTab === 'metrics' && <MetricsPanel />}
               {activeTab === 'settings' && <SettingsPanel />}

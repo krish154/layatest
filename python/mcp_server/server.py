@@ -420,5 +420,39 @@ else:
         server.serve_forever()
 
 
+# ============================================================
+# Register Additional Tool Providers
+# ============================================================
+def register_all_tools():
+    """Register all available tool providers."""
+    
+    # Browser tools (if playwright available)
+    try:
+        from browser_module.browser_automation import register_browser_tools
+        register_browser_tools(registry)
+    except ImportError:
+        print("[MCP] Browser module not available (install playwright)")
+    
+    # Audio tools
+    try:
+        from audio_pipeline.audio_pipeline import register_audio_tools
+        register_audio_tools(registry)
+    except ImportError:
+        print("[MCP] Audio module not available")
+    
+    # Plugin tools
+    try:
+        from tools.plugins import register_git_tools, register_network_tools, register_home_tools
+        register_git_tools(registry)
+        register_network_tools(registry)
+        register_home_tools(registry)
+    except ImportError:
+        print("[MCP] Plugin tools not available")
+
+
+# Register all tools on startup
+register_all_tools()
+
+
 if __name__ == "__main__":
     run_server()

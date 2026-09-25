@@ -4,6 +4,7 @@ import { Send, Mic, MicOff, Volume2, VolumeX, Sparkles, Zap, Brain, Cpu } from '
 import { useAgentStore } from '../store/agentStore';
 import { processRequest } from '../services/agent';
 import { createVoiceEngine, speak, stopSpeaking } from '../services/voice';
+import VoiceWaveform from './VoiceWaveform';
 import type { VoiceState } from '../types';
 
 export default function ChatInterface() {
@@ -265,6 +266,12 @@ export default function ChatInterface() {
 
       {/* Input */}
       <div className="px-5 py-3 border-t border-gray-800/50">
+        {/* Voice Waveform */}
+        {voiceState.isListening && (
+          <div className="mb-2">
+            <VoiceWaveform isActive={voiceState.isListening} volume={0.7} />
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <button
             type="button"
