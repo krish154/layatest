@@ -115,10 +115,13 @@ function PerfBar({ label, value, color, target }: { label: string; value: number
 
 function getEventColor(type: string): string {
   if (type.includes('Request') || type.includes('Input')) return 'bg-blue-500/10 text-blue-400';
-  if (type.includes('Laya') || type.includes('Fast')) return 'bg-amber-500/10 text-amber-400';
+  if (type.includes('LayaCall1')) return 'bg-amber-500/10 text-amber-400';
+  if (type.includes('LayaCall2')) return 'bg-orange-500/10 text-orange-400';
+  if (type.includes('Fetch') || type.includes('Tools')) return 'bg-cyan-500/10 text-cyan-400';
+  if (type.includes('Fast')) return 'bg-yellow-500/10 text-yellow-400';
   if (type.includes('Tool') || type.includes('Execute')) return 'bg-emerald-500/10 text-emerald-400';
   if (type.includes('Qwen')) return 'bg-purple-500/10 text-purple-400';
-  if (type.includes('Verif')) return 'bg-cyan-500/10 text-cyan-400';
+  if (type.includes('Verif')) return 'bg-teal-500/10 text-teal-400';
   if (type.includes('Error') || type.includes('Fail')) return 'bg-red-500/10 text-red-400';
   return 'bg-gray-500/10 text-gray-400';
 }

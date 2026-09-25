@@ -353,8 +353,26 @@ if HAS_DEPS:
     
     @app.get("/api/tools")
     async def get_tools(domain: Optional[str] = None):
+        """
+        SINGLE METHOD: Fetch ALL tools from MCP server.
+        
+        This is called by the frontend/backend after Laya Call #1 says YES.
+        Returns the complete tool list that gets submitted to Laya Call #2
+        for tool selection.
+        
+        Flow:
+        1. Laya Call #1: "Can you handle this?" → YES
+        2. THIS METHOD: Fetch ALL tools from MCP
+        3. Submit ALL tools to Laya Call #2: "Pick one"
+        4. Execute selected tool
+        """
         tools = await orchestrator.get_tools(domain)
-        return {"tools": tools}
+        return {
+            "tools": tools,
+            "count": len(tools),
+            "domains": list(set(t.get("domain", "unknown") for t in tools)),
+            "note": "Submit this full list to Laya Call #2 for tool selection"
+        }
     
     @app.post("/api/execute")
     async def execute_tool(request: dict):

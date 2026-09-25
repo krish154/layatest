@@ -52,7 +52,7 @@ export default function ArchitectureView() {
         />
         <FlowArrow />
 
-        {/* Laya System-1 */}
+        {/* LAYA CALL #1 — "Can you handle this?" */}
         <div className={`rounded-xl border p-3 transition-all ${getNodeColor(isActive('Laya #1'), isComplete('Laya #1'))}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
@@ -60,58 +60,46 @@ export default function ArchitectureView() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white">Laya 421M</span>
+                <span className="text-sm font-medium text-white">Laya Call #1</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">System-1</span>
                 {layaDecision && (
                   <span className="text-[10px] text-gray-500">{layaDecision.latency_ms}ms</span>
                 )}
               </div>
-              <p className="text-xs text-gray-500">Intent • Routing • Confidence</p>
+              <p className="text-xs text-gray-500">"Can you handle this request?"</p>
             </div>
             {layaDecision && (
               <div className="text-right">
-                <div className="text-[10px] text-gray-400">Conf: {(layaDecision.confidence * 100).toFixed(0)}%</div>
-                <div className="text-[10px] text-gray-500">Risk: {layaDecision.risk}</div>
+                <div className={`text-[10px] font-medium ${layaDecision.tool_required ? 'text-emerald-400' : 'text-purple-400'}`}>
+                  {layaDecision.tool_required ? '✓ YES' : '✗ NO → Qwen'}
+                </div>
+                <div className="text-[10px] text-gray-500">Conf: {(layaDecision.confidence * 100).toFixed(0)}%</div>
               </div>
             )}
           </div>
-          
-          {/* Laya decisions */}
-          {layaDecision && (
-            <div className="mt-2 grid grid-cols-3 gap-1">
-              <DecisionBadge label="Tool" value={!!layaDecision.tool_required} />
-              <DecisionBadge label="Browser" value={!!layaDecision.browser_required} />
-              <DecisionBadge label="Reason" value={!!layaDecision.reasoning_required} />
-            </div>
-          )}
         </div>
 
-        {/* Branch */}
+        {/* Branch: YES path (Laya handles) vs NO path (Qwen) */}
         <div className="flex items-center gap-2 px-4">
           <div className="flex-1 h-px bg-gray-800" />
-          <span className="text-[10px] text-gray-600">ROUTE</span>
+          <span className="text-[10px] text-gray-600">LAYA SAYS: {layaDecision?.tool_required ? '✓ YES' : '?'}</span>
           <div className="flex-1 h-px bg-gray-800" />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          {/* Laya Direct Path - Single Laya call handles everything */}
+          {/* Laya Direct Path - Two calls: #1 can handle? #2 pick tool */}
           <div className={`rounded-xl border p-3 transition-all ${
-            layaDecision?.intent === 'direct_tool_execution' ? 'border-amber-500/50 bg-amber-500/5' :
-            (routeDecision?.path ?? '') === 'direct_tool' ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-gray-700/30 bg-gray-800/20'
+            (routeDecision?.path ?? '') === 'laya_direct' ? 'border-amber-500/50 bg-amber-500/5' : 'border-gray-700/30 bg-gray-800/20'
           }`}>
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs font-medium text-amber-400">
-                {layaDecision?.intent === 'direct_tool_execution' ? 'Laya Direct' : 'Simple Path'}
-              </span>
-              {layaDecision?.intent === 'direct_tool_execution' && (
-                <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-300">1 call</span>
-              )}
+              <span className="text-xs font-medium text-amber-400">Laya Handles (2 calls)</span>
             </div>
             <div className="space-y-1.5">
-              <MiniNode label="Laya" sublabel={layaDecision?.intent === 'direct_tool_execution' ? 'Decide + Route' : 'Classify'} active={isActive('Laya #1')} />
-              <MiniNode label="Execute" sublabel="Tool gateway" active={isActive('Execute')} />
-              <MiniNode label="Verify" sublabel="Check result" active={isActive('Verify')} />
+              <MiniNode label="Fetch Tools" sublabel="Python → ALL tools" active={isActive('Fetch Tools')} complete={isComplete('Fetch Tools')} />
+              <MiniNode label="Laya #2" sublabel="Pick 1 tool from ALL" active={isActive('Laya #2')} complete={isComplete('Laya #2')} />
+              <MiniNode label="Execute" sublabel="Run selected tool" active={isActive('Execute')} complete={isComplete('Execute')} />
+              <MiniNode label="Verify" sublabel="Check result" active={isActive('Verify')} complete={isComplete('Verify')} />
             </div>
           </div>
 
@@ -215,13 +203,15 @@ function ArchNode({ icon, label, sublabel, active, complete }: {
   );
 }
 
-function MiniNode({ label, sublabel, active }: { label: string; sublabel: string; active: boolean }) {
+function MiniNode({ label, sublabel, active, complete }: { label: string; sublabel: string; active: boolean; complete?: boolean }) {
   return (
     <div className={`px-2 py-1.5 rounded-lg border transition-all ${
+      complete ? 'border-emerald-500/50 bg-emerald-500/10' :
       active ? 'border-violet-500/50 bg-violet-500/10' : 'border-gray-700/30 bg-gray-800/20'
     }`}>
-      <span className={`text-[10px] font-medium ${active ? 'text-violet-300' : 'text-gray-400'}`}>{label}</span>
+      <span className={`text-[10px] font-medium ${complete ? 'text-emerald-300' : active ? 'text-violet-300' : 'text-gray-400'}`}>{label}</span>
       <span className="text-[10px] text-gray-600 ml-1">• {sublabel}</span>
+      {complete && <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400 inline ml-1" />}
     </div>
   );
 }

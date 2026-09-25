@@ -231,8 +231,10 @@ export default function ChatInterface() {
                       </span>
                     )}
                     {msg.metadata.laya_calls !== undefined && msg.metadata.laya_calls > 0 && (
-                      <span className="text-[10px] text-amber-400/60">
+                      <span className="text-[10px] text-amber-400/60 flex items-center gap-0.5">
+                        <Brain className="w-2.5 h-2.5" />
                         L×{msg.metadata.laya_calls}
+                        {msg.metadata.laya_calls === 2 && <span className="text-[8px] ml-0.5">#1+#2</span>}
                       </span>
                     )}
                     {msg.metadata.qwen_called && (
